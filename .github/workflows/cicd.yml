@@ -1,0 +1,50 @@
+# Github Actions workflow
+name: CI
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        # on different python versions and os systems
+        python-version: [3.7, 3.8, 3.9, 3.10.x]
+        os: [ubuntu-latest, windows-latest]
+        # release: [v1,v2,v3]
+        #exclude:
+            #  - os: macos-latest
+            #    python-version: "3.7"
+            #  - os: windows-latest
+            #    python-version: "3.7"
+    runs-on: ${{matrix.os}}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: install packages
+        run: make install
+      - name: lint
+        run: make lint
+      - name: test
+        run: make test
+      - name: format
+        run: make format
+      - name: deploy
+        # deploy only on python 3.7
+        if: matrix.python-version == '3.7'
+        run: make deploy
+        # Build status badge
+      # - name: Build status badge
+      #   uses: RubbaBoy/BYOB@v1.3.0
+      #   with:
+      #     NAME: ${{ matrix.release }}
+      #     LABEL: ${{ matrix.release }}
+      #     STATUS: ${{ job.status }}
+      #     COLOR: ${{ job.status == 'success' && 'green' || job.status == 'failure' && 'red' || 'yellow' }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
